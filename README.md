@@ -1,1 +1,2 @@
-# time_series_for_stock_price_prediction
+# Time Series for Stock Price Prediction
+
