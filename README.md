@@ -5,9 +5,9 @@ In this project we built an automated time series forecasting framework for stoc
 ## Folder Structure
 
 - **data**: This folder contains the project's data in CSV format.
-- **dev**: This folder is dedicated to the analysis of the data using Python notebooks.
-- **pipeline.py**: This file contains a list of classes provided by Prosperity Wiki.
-- **evaluation.py**: This file contains a script that measures th.
+- **dev**: This folder contains work in progress
+- **pipeline.py**: This file contains our automated time series forecasting training pipeline
+- **evaluation.py**: This file contains a script that measures the performance of our models.
 
 ## Installation
 
