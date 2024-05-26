@@ -41,7 +41,7 @@ To ensure a clean and isolated environment, we recommed using a virtual environm
 
 4. **Download Data: Populate the data dictionary by downloading data from kaggle:
 
-    Head to [kaggle](https://www.kaggle.com/datasets/svaningelgem/nasdaq-daily-stock-prices/data) and download and unzip the data and move it to the data/raw directory:
+    Head to [kaggle](https://www.kaggle.com/datasets/svaningelgem/nasdaq-daily-stock-prices/data) and download and unzip the Nasdaq stock price dataset and move it to the data/raw directory:
     ```
     unzip downloads/archive.zip
     mv downloads/archive/*.csv time_series_for_stock_price_prediction/data/raw
