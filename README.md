@@ -38,3 +38,11 @@ To ensure a clean and isolated environment, we recommed using a virtual environm
     ```
     pip install -r requirements.txt
     ```
+
+4. **Download Data**: Populate the data dictionary by downloading data from kaggle:
+
+    Head to [kaggle](https://www.kaggle.com/datasets/svaningelgem/nasdaq-daily-stock-prices/data) and download and unzip the Nasdaq stock price dataset and move it to the data/raw directory:
+    ```
+    unzip Downloads/archive.zip
+    mv /Downloads/archive/*.csv /time_series_for_stock_price_prediction/data/raw
+    ```
