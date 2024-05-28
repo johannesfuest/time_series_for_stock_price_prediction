@@ -43,6 +43,7 @@ def clean_data(file_names: List[str], file_prefix: str, dir_name: str, dev: bool
         
         # Ensure correct data types
         df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d")
+        df = df[df["date"] <= "2024-03-12"].copy()
         df["open"] = pd.to_numeric(df["open"], errors="coerce")
         df["high"] = pd.to_numeric(df["high"], errors="coerce")
         df["low"] = pd.to_numeric(df["low"], errors="coerce")
