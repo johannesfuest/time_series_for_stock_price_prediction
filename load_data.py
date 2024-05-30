@@ -10,7 +10,7 @@ def load_ticker_data(ticker):
     Returns:
     DataFrame: Pandas DataFrame containing the stock data.
     """
-    file_path = f'data/raw/{ticker}.csv' 
+    file_path = f'data/cleaned/{ticker}.csv' 
     try:
         data = pd.read_csv(file_path)
         return data
