@@ -5,8 +5,8 @@ from sklearn.metrics import mean_squared_error
 from pmdarima import auto_arima
 import itertools
 
-def sarima_training(data, p_values, d_values, q_values, P_values, D_values, Q_values, s_values):
-    # Given the data from the load_data function, as well as vectors of  values to try
+def sarima_training(file_path, p_values, d_values, q_values, P_values, D_values, Q_values, s_values, split_num):
+    data = pd.read_csv(file_path)    
     data['date'] = pd.to_datetime(data['date'])
     data.set_index('date', inplace=True)
     # Selecting the 'close' price for modeling
@@ -22,14 +22,12 @@ def sarima_training(data, p_values, d_values, q_values, P_values, D_values, Q_va
         order = (p, d, q)
         seasonal_order = (P, D, Q, s)
         try:
-            model = SARIMAX(train, order=order, seasonal_order=seasonal_order,
-                            enforce_stationarity=False, enforce_invertibility=False)
-            model_fit = model.fit(disp=0)
-            predictions = model_fit.forecast(len(test))
-            rmse = np.sqrt(mean_squared_error(test, predictions))
-            if rmse < best_rmse:
-                best_rmse, best_cfg = rmse, (order, seasonal_order)
-            print(f'Tested: {order}x{seasonal_order} with RMSE={rmse}')
+            rmse_scores = sarima_cv(data, order, seasonal_order, split_num)
+            # take average of rmse scores
+            avg = statistics.mean(rmse_scores)
+            if avg < best_rmse:
+                best_rmse, best_cfg = avg, (order, seasonal_order)
+            print(f'Tested: {order}x{seasonal_order} with RMSE={avg}')
         except:
             continue
 
