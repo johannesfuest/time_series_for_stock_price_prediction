@@ -27,7 +27,7 @@ def get_inefficient_files(files: List[str], output_file: str) -> None:
     :return: None
     """
     with open(output_file, 'w') as f:
-        f.write('file|p-value|autocorrelation\n')
+        f.write('file_name|p-value|autocorrelation\n')
         for file in tqdm(files, desc='Checking files for autocorrelation...'):
             data = pd.read_csv(f'data/cleaned/{file}')
             try:

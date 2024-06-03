@@ -1,6 +1,7 @@
 from ljung_box_pierce import lbp_test
 import pandas as pd
 import numpy as np
+import os
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
@@ -54,27 +55,23 @@ def sarima_cv(file_path, order, split_num):
     return rmse_scores
 
 
-def test_best_model_significance(file_path, order, refit_rolling=False):
-    TRAINING_PERCENT = 0.9
+def get_model_predictions(file_path, order, rolling=False):
+    TRAINING_PERCENT = 0.95
     data_df = pd.read_csv(file_path)
     data = data_df['close']
     resids = []
     preds = []
     actuals = []
-    if refit_rolling:
-        update_freq = 7
-        for i in range(int(TRAINING_PERCENT*len(data)), len(data)-2, update_freq):
+    if rolling:
+        for i in range(int(TRAINING_PERCENT*len(data)), len(data)-2):
             data_train_temp = data[:i]
             data_test_temp = data[i:]
             model = ARIMA(data_train_temp, order=order)
             model_fit = model.fit()
-            predictions = model_fit.forecast(update_freq)
-            for j in range(0, update_freq):
-                if j >= len(data_test_temp):
-                    break
-                resids.append(data_test_temp.iloc[j] - predictions.iloc[j])
-                preds.append(predictions.iloc[j])
-                actuals.append(data_test_temp.iloc[j])
+            predictions = model_fit.forecast(1)
+            resids.append(data_test_temp.iloc[0] - predictions.iloc[0])
+            preds.append(predictions.iloc[0])
+            actuals.append(data_test_temp.iloc[0])
     else:
         model = ARIMA(data[:int(TRAINING_PERCENT*len(data))], order=order)
         model_fit = model.fit()
@@ -82,15 +79,34 @@ def test_best_model_significance(file_path, order, refit_rolling=False):
         resids = data[int(TRAINING_PERCENT*len(data)):] - predictions
         preds = predictions
         actuals = data[int(TRAINING_PERCENT*len(data)):]  
-    p_value, autocorrelated = lbp_test(resids, order[0], order[2], k=min(20, len(resids) - 1), significance=0.05)
     ticker_name = file_path.split("/")[-1].split(".")[0]
-    with open(f"./data/predictions/{ticker_name}.csv", "a") as f:
-        for pred, act in zip(preds, actuals):
-            f.write(f'{pred}|{act}\n')
+    if not rolling:
+        with open(f"./data/predictions/{ticker_name}.csv", "a") as f:
+            f.write('pred|actual\n')
+            for pred, act in zip(preds, actuals):
+                f.write(f'{pred}|{act}\n')
+    else:
+        with open(f"./data/predictions/{ticker_name}_rolling.csv", "a") as f:
+            f.write('pred|actual\n')
+            for pred, act in zip(preds, actuals):
+                f.write(f'{pred}|{act}\n')
+                
+    return
+
+
+def test_model_significance(file_path, order):
+    TRAINING_PERCENT = 0.9
+    data_df = pd.read_csv(file_path)
+    data = data_df['close']
+    data = data[:int(TRAINING_PERCENT*len(data))]
+    model = ARIMA(data, order=order)
+    model_fit = model.fit()
+    residuals = model_fit.resid
+    p_value, autocorrelated = lbp_test(residuals, order[0], order[2], k=min(20, len(residuals) - 1), significance=0.05)
     return p_value, autocorrelated
     
 
-def sarima_training(file_path, p_values, d_values, q_values, split_num):
+def sarima_training(file_path, p_values, d_values, q_values, split_num, predict= False, rolling=False):
     best_rmse = np.inf
     best_cfg = None
     
@@ -103,7 +119,7 @@ def sarima_training(file_path, p_values, d_values, q_values, split_num):
         if avg < best_rmse:
             best_rmse, best_cfg = avg, (order)
     # Check significance of best model
-    p_value, autocorrelated = test_best_model_significance(file_path, best_cfg)
+    p_value, autocorrelated = test_model_significance(file_path, best_cfg)
+    if predict:
+        get_model_predictions(file_path, best_cfg, rolling)
     return best_cfg, best_rmse, p_value, autocorrelated
-
-
