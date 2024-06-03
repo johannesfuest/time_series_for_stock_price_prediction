@@ -32,7 +32,7 @@ def sarima_cv(file_path, order, split_num):
     Returns:
         list: RMSE scores for each split.
     """
-    TRAINING_PERCENT = 0.95
+    TRAINING_PERCENT = 0.9
     data_df = pd.read_csv(file_path)
     data = data_df['close']
     data_train = data[:int(TRAINING_PERCENT*len(data))]
@@ -42,7 +42,7 @@ def sarima_cv(file_path, order, split_num):
     if n_records < split_num:
         raise ValueError("Number of splits is greater than the number of data points.")
     
-    cutoffs = np.linspace(int(0.5*n_records), n_records, split_num + 1, dtype=int)
+    cutoffs = np.linspace(int(0.7*n_records), n_records, split_num + 1, dtype=int)
     rmse_scores = []
     for i in range(0, split_num):
         train, test = data.iloc[:cutoffs[i]], data.iloc[cutoffs[i]:cutoffs[i+1]]
@@ -54,24 +54,35 @@ def sarima_cv(file_path, order, split_num):
     return rmse_scores
 
 
-def test_best_model_significance(file_path, order):
-    TRAINING_PERCENT = 0.95
+def test_best_model_significance(file_path, order, refit_rolling=False):
+    TRAINING_PERCENT = 0.9
     data_df = pd.read_csv(file_path)
     data = data_df['close']
     resids = []
     preds = []
     actuals = []
-    for i in range(int(TRAINING_PERCENT*len(data)), len(data)-2):
-        data_train_temp = data[:i]
-        data_test_temp = data[i:]
-        model = ARIMA(data_train_temp, order=order)
+    if refit_rolling:
+        update_freq = 7
+        for i in range(int(TRAINING_PERCENT*len(data)), len(data)-2, update_freq):
+            data_train_temp = data[:i]
+            data_test_temp = data[i:]
+            model = ARIMA(data_train_temp, order=order)
+            model_fit = model.fit()
+            predictions = model_fit.forecast(update_freq)
+            for j in range(0, update_freq):
+                if j >= len(data_test_temp):
+                    break
+                resids.append(data_test_temp.iloc[j] - predictions.iloc[j])
+                preds.append(predictions.iloc[j])
+                actuals.append(data_test_temp.iloc[j])
+    else:
+        model = ARIMA(data[:int(TRAINING_PERCENT*len(data))], order=order)
         model_fit = model.fit()
-        predictions = model_fit.forecast(1)
-        resids.append(data_test_temp.iloc[0] - predictions.iloc[0])
-        preds.append(predictions.iloc[0])
-        actuals.append(data_test_temp.iloc[0])
-        
-    p_value, autocorrelated = lbp_test(resids, order[0], order[2])
+        predictions = model_fit.forecast(len(data) - int(TRAINING_PERCENT*len(data)))
+        resids = data[int(TRAINING_PERCENT*len(data)):] - predictions
+        preds = predictions
+        actuals = data[int(TRAINING_PERCENT*len(data)):]  
+    p_value, autocorrelated = lbp_test(resids, order[0], order[2], k=min(20, len(resids) - 1), significance=0.05)
     ticker_name = file_path.split("/")[-1].split(".")[0]
     with open(f"./data/predictions/{ticker_name}.csv", "a") as f:
         for pred, act in zip(preds, actuals):

@@ -15,9 +15,9 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def get_best_configs(output_file: str, df_autocorrs: pd.DataFrame, p_values: List[int] = list(range(0, 5)), 
-                     d_values: List[int] = list(range(0, 2)), q_values: List[int] = list(range(0, 5)),  
-                     split_num: int = 5) -> None:
+def get_best_configs(output_file: str, df_autocorrs: pd.DataFrame, p_values: List[int] = list(range(0, 3)), 
+                     d_values: List[int] = list(range(0, 1)), q_values: List[int] = list(range(0, 3)),  
+                     split_num: int = 4) -> None:
     """
     This function finds the best SARIMA model configurations for a list of time series data files by performing a grid 
     search and cross-validation. The best configurations are written to the output file.
@@ -31,12 +31,12 @@ def get_best_configs(output_file: str, df_autocorrs: pd.DataFrame, p_values: Lis
     
     :return: None
     """
-    with open(output_file, 'w') as f:
+    with open(output_file, 'a') as f:
         f.write('file|best_cfg|avg_rmse_across_folds|p_val|resids_autocorrelated\n')
     for file in tqdm(df_autocorrs['file'], desc='Finding best model configurations...'):
         best_cfg, best_rmse, p_val, autocorrelated = sarima_training(f'data/cleaned/{file}', p_values, d_values, q_values, split_num)
-        with open(output_file, 'w') as f:
-            f.write(f'{file}|{best_cfg}|{best_rmse}|{p_val}|{autocorrelated}\n')
+        with open(output_file, 'a') as f1:
+            f1.write(f'{file}|{best_cfg}|{best_rmse}|{p_val}|{autocorrelated}\n')
 
 if __name__ == '__main__':
     os.chdir(os.path.dirname(__file__))
