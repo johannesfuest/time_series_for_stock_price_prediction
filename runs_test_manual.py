@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import os
-from scipy.stats import runs
+from scipy.stats import runs, norm
 import argparse
 
 def runs_test_manual(data):
@@ -26,8 +26,11 @@ def runs_test_manual(data):
     if variance_runs == 0:
         return None  # Avoid division by zero
     Z = (num_runs - expected_runs) / np.sqrt(variance_runs)
+    
+    # Calculate the p-value for a two-tailed test
+    p_value = 2 * (1 - norm.cdf(abs(Z)))
 
-    return Z, num_runs, expected_runs
+    return Z, p_value
 
 def process_file(filepath):
     """ Process an individual file to perform the runs test. """
@@ -36,8 +39,8 @@ def process_file(filepath):
         if 'Close' not in data.columns:
             raise ValueError(f"No 'Close' column in {filepath}")
         
-        z_stat, num_runs, expected_runs = runs_test_manual(data['Close'])
-        print(f"Runs Test for {os.path.basename(filepath)}: Z-statistic = {z_stat}, Runs = {num_runs}, Expected Runs = {expected_runs}")
+        Z, p_value = runs_test_manual(data['Close'])
+        print(f"Runs Test for {os.path.basename(filepath)}: Z-statistic = {Z}, P value = {p_value}")
     except Exception as e:
         print(f"Error processing {filepath}: {e}")
 
