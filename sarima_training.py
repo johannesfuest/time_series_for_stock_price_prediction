@@ -32,7 +32,7 @@ def sarima_cv(file_path, order, split_num):
     Returns:
         list: RMSE scores for each split.
     """
-    TRAINING_PERCENT = 0.8
+    TRAINING_PERCENT = 0.95
     data_df = pd.read_csv(file_path)
     data = data_df['close']
     data_train = data[:int(TRAINING_PERCENT*len(data))]
@@ -55,20 +55,20 @@ def sarima_cv(file_path, order, split_num):
 
 
 def test_best_model_significance(file_path, order):
-    TRAINING_PERCENT = 0.9
+    TRAINING_PERCENT = 0.95
     data_df = pd.read_csv(file_path)
     data = data_df['close']
     resids = []
-    predictions = []
+    preds = []
     actuals = []
-    for i in range(int(0.8*len(data)), len(data)-2):
+    for i in range(int(TRAINING_PERCENT*len(data)), len(data)-2):
         data_train_temp = data[:i]
         data_test_temp = data[i:]
         model = ARIMA(data_train_temp, order=order)
         model_fit = model.fit()
         predictions = model_fit.forecast(1)
         resids.append(data_test_temp.iloc[0] - predictions.iloc[0])
-        predictions.append(predictions.iloc[0])
+        preds.append(predictions.iloc[0])
         actuals.append(data_test_temp.iloc[0])
         
     p_value, autocorrelated = lbp_test(resids, order[0], order[2])

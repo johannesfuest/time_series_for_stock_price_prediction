@@ -33,14 +33,14 @@ def get_best_configs(output_file: str, df_autocorrs: pd.DataFrame, p_values: Lis
     """
     with open(output_file, 'w') as f:
         f.write('file|best_cfg|avg_rmse_across_folds|p_val|resids_autocorrelated\n')
-        for file in tqdm(df_autocorrs['file'], desc='Finding best model configurations...'):
-            best_cfg, best_rmse, p_val, autocorrelated = sarima_training(f'data/cleaned/{file}', p_values, d_values, q_values, split_num)
+    for file in tqdm(df_autocorrs['file'], desc='Finding best model configurations...'):
+        best_cfg, best_rmse, p_val, autocorrelated = sarima_training(f'data/cleaned/{file}', p_values, d_values, q_values, split_num)
+        with open(output_file, 'w') as f:
             f.write(f'{file}|{best_cfg}|{best_rmse}|{p_val}|{autocorrelated}\n')
 
 if __name__ == '__main__':
     os.chdir(os.path.dirname(__file__))
     df_autocorrs = pd.read_csv('autocorr_test.csv', sep='|')
     df_autocorrs = df_autocorrs[df_autocorrs['autocorrelation'] == True]
-    df_autocorrs = df_autocorrs.iloc[:10]
     get_best_configs(parse_args().output_file, df_autocorrs)
     
