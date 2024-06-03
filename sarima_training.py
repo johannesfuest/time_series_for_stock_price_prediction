@@ -74,7 +74,7 @@ def test_best_model_significance(file_path, order):
     p_value, autocorrelated = lbp_test(resids, order[0], order[2])
     ticker_name = file_path.split("/")[-1].split(".")[0]
     with open(f"./data/predictions/{ticker_name}.csv", "a") as f:
-        for pred, act in zip(predictions, actuals):
+        for pred, act in zip(preds, actuals):
             f.write(f'{pred}|{act}\n')
     return p_value, autocorrelated
     
