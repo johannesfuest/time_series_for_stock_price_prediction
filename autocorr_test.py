@@ -11,7 +11,7 @@ def parse_args():
     :return: parsed arguments
     """
     parser = argparse.ArgumentParser(description='Identify inefficient files')
-    parser.add_argument('--output_file', type=str, help='Output file to save inefficient files to')
+    parser.add_argument('--output_file', type=str, default='autocorr_test.csv', help='Output file to save inefficient files to')
     return parser.parse_args()
 
 
@@ -26,16 +26,16 @@ def get_inefficient_files(files: List[str], output_file: str) -> None:
     
     :return: None
     """
-    with open(output_file, 'w') as f:
-        f.write('file_name|p-value|autocorrelation\n')
+    with open(f'data/results/{output_file}', 'w') as f:
+        f.write('file|p-value|autocorrelation\n')
         for file in tqdm(files, desc='Checking files for autocorrelation...'):
             data = pd.read_csv(f'data/cleaned/{file}')
             try:
                 p_value, autocorrelated = lbp_test(data['close'], p=0, q=0)
             except ValueError:
                 continue
-            f.write(f'{file}|{p_value}|{autocorrelated}\n')
-    return 
+            f.write(f'{file.split('_')[1]}|{p_value}|{autocorrelated}\n')
+    return
 
 if __name__=='__main__':
     os.chdir(os.path.dirname(__file__))

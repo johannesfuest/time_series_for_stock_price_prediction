@@ -1,4 +1,5 @@
 from ljung_box_pierce import lbp_test
+from numpy.linalg import LinAlgError
 import pandas as pd
 import numpy as np
 import os
@@ -48,22 +49,26 @@ def sarima_cv(file_path, order, split_num):
     for i in range(0, split_num):
         train, test = data.iloc[:cutoffs[i]], data.iloc[cutoffs[i]:cutoffs[i+1]]
         model = ARIMA(train, order=order)
-        model_fit = model.fit()
+        try:
+            model_fit = model.fit()
+        except LinAlgError:
+            #rare LU decomposition error
+            continue
         predictions = model_fit.forecast(len(test))
         rmse = np.sqrt(mean_squared_error(test, predictions))
         rmse_scores.append(rmse)
     return rmse_scores
 
 
-def get_model_predictions(file_path, order, rolling=False):
-    TRAINING_PERCENT = 0.95
+def get_model_predictions(file_path, order, rolling=False, n_test=10):
+    TRAINING_PERCENT = 0.9
     data_df = pd.read_csv(file_path)
     data = data_df['close']
     resids = []
     preds = []
     actuals = []
     if rolling:
-        for i in range(int(TRAINING_PERCENT*len(data)), len(data)-2):
+        for i in range(len(data)-2-n_test, len(data)-2):
             data_train_temp = data[:i]
             data_test_temp = data[i:]
             model = ARIMA(data_train_temp, order=order)
@@ -90,7 +95,6 @@ def get_model_predictions(file_path, order, rolling=False):
             f.write('pred|actual\n')
             for pred, act in zip(preds, actuals):
                 f.write(f'{pred}|{act}\n')
-                
     return
 
 
@@ -106,7 +110,7 @@ def test_model_significance(file_path, order):
     return p_value, autocorrelated
     
 
-def sarima_training(file_path, p_values, d_values, q_values, split_num, predict= False, rolling=False):
+def sarima_training(file_path, p_values, d_values, q_values, split_num, predict=False, rolling=False, n_test=10):
     best_rmse = np.inf
     best_cfg = None
     
@@ -121,5 +125,5 @@ def sarima_training(file_path, p_values, d_values, q_values, split_num, predict=
     # Check significance of best model
     p_value, autocorrelated = test_model_significance(file_path, best_cfg)
     if predict:
-        get_model_predictions(file_path, best_cfg, rolling)
+        get_model_predictions(file_path, best_cfg, rolling, n_test)
     return best_cfg, best_rmse, p_value, autocorrelated

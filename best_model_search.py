@@ -16,12 +16,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--rolling', action='store_true', help='Refit model on rolling window when predicting')
     parser.add_argument('--split_num', type=int, default=4, help='Number of splits for cross-validation')
     parser.add_argument('--predict', action='store_true', help='Predict on test data using best model configs')
+    parser.add_argument('--n_test', type=int, default=10, help='Number of test data points to predict on for rolling')
     return parser.parse_args()
 
 
-def get_best_configs(output_file: str, df_autocorrs: pd.DataFrame, p_values: List[int] = list(range(0, 4)), 
-                     d_values: List[int] = list(range(0, 3)), q_values: List[int] = list(range(0, 4)),  
-                     split_num: int = 4, sample: bool = False, predict: bool = False, rolling: bool = False) -> None:
+def get_best_configs(output_file: str, df_autocorrs: pd.DataFrame, p_values: List[int] = list(range(0, 5)), 
+                     d_values: List[int] = list(range(0, 3)), q_values: List[int] = list(range(0, 5)),  
+                     split_num: int = 5, sample: bool = False, predict: bool = False, rolling: bool = False,
+                     n_test: int = 10) -> None:
     """
     This function finds the best SARIMA model configurations for a list of time series data files by performing a grid 
     search and cross-validation. The best configurations are written to the output file.
@@ -39,20 +41,18 @@ def get_best_configs(output_file: str, df_autocorrs: pd.DataFrame, p_values: Lis
     :return: None
     """
     if sample:
-        df_diagnostics = pd.read_csv('diagnostics.csv')
-        df_autocorrs['file_name'] = df_autocorrs['file_name'].apply(lambda x: x.split('_')[1])
-        df_autocorrs = pd.merge(df_autocorrs, df_diagnostics, on='file_name', how='left')
+        df_diagnostics = pd.read_csv('data/results/diagnostics.csv')
+        df_autocorrs = pd.merge(df_autocorrs, df_diagnostics, on='file', how='left')
         df_autocorrs = df_autocorrs.query('n_rows_after >= 1000 and n_rows_after <= 2000').copy()
-        df_autocorrs['file_name'] = df_autocorrs['file_name'].apply(lambda x: f'cleaned_{x}')
         df_autocorrs = df_autocorrs.sample(100)
         
-    with open(output_file, 'a') as f:
+    with open(f'data/results/{output_file}', 'a') as f:
         f.write('file|best_cfg|avg_rmse_across_folds|p_val|resids_autocorrelated\n')
-    for file in tqdm(df_autocorrs['file_name'], desc='Finding best model configurations...'):
+    for file in tqdm(df_autocorrs['file'], desc='Finding best model configurations...'):
         # try:
-        best_cfg, best_rmse, p_val, autocorrelated = sarima_training(f'data/cleaned/{file}', p_values, d_values, 
-                                                                     q_values, split_num, predict, rolling)
-        with open(output_file, 'a') as f1:
+        best_cfg, best_rmse, p_val, autocorrelated = sarima_training(f'data/cleaned/cleaned_{file}', p_values, d_values, 
+                                                                     q_values, split_num, predict, rolling, n_test)
+        with open(f'data/results/{output_file}', 'a') as f1:
             f1.write(f'{file}|{best_cfg}|{best_rmse}|{p_val}|{autocorrelated}\n')
         # except:
         #     with open(output_file, 'a') as f1:
@@ -61,8 +61,9 @@ def get_best_configs(output_file: str, df_autocorrs: pd.DataFrame, p_values: Lis
 
 if __name__ == '__main__':
     os.chdir(os.path.dirname(__file__))
-    df_autocorrs = pd.read_csv('autocorr_test.csv', sep='|')
+    df_autocorrs = pd.read_csv('data/results/autocorr_test.csv', sep='|')
     df_autocorrs = df_autocorrs[df_autocorrs['autocorrelation'] == True]
-    get_best_configs(parse_args().output_file, df_autocorrs, sample=parse_args().sample)
+    get_best_configs(parse_args().output_file, df_autocorrs, sample=parse_args().sample, predict=parse_args().predict,
+                        rolling=parse_args().rolling, split_num=parse_args().split_num, n_test=parse_args().n_test)
     
     

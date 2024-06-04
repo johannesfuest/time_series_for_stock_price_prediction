@@ -33,7 +33,7 @@ def clean_data(file_names: List[str], file_prefix: str, dir_name: str, dev: bool
     """
     
     diagnostics = pd.DataFrame(columns=[
-        "file_name", "n_rows_before", "n_rows_after", "n_rows_removed", "n_missing_date", "n_missing_open",
+        "file", "n_rows_before", "n_rows_after", "n_rows_removed", "n_missing_date", "n_missing_open",
         "n_missing_high", "n_missing_low", "n_missing_close", "percent_missing_date", "percent_missing_open",
         "percent_missing_high", "percent_missing_low", "percent_missing_close", "max_date_diff", "n_date_diffs_above_2"])
     
@@ -44,6 +44,8 @@ def clean_data(file_names: List[str], file_prefix: str, dir_name: str, dev: bool
         # Ensure correct data types
         df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d")
         df = df[df["date"] <= "2024-03-12"].copy()
+        if df.shape[0] <= 60:
+            continue
         df["open"] = pd.to_numeric(df["open"], errors="coerce")
         df["high"] = pd.to_numeric(df["high"], errors="coerce")
         df["low"] = pd.to_numeric(df["low"], errors="coerce")
@@ -64,6 +66,8 @@ def clean_data(file_names: List[str], file_prefix: str, dir_name: str, dev: bool
         
         
         df = df.dropna()
+        if df.shape[0] <= 60:
+            continue
         df["date_diff"] = df["date"].diff()
         n_rows_after = df.shape[0]
         max_date_diff = df["date_diff"].max()
@@ -71,16 +75,19 @@ def clean_data(file_names: List[str], file_prefix: str, dir_name: str, dev: bool
         n_rows_removed = n_rows_before - n_rows_after
         start_date = df["date"].min()
         end_date = df["date"].max()
-        
-        diagnostics = pd.concat([diagnostics, pd.DataFrame({
-            "file_name": [file_name], "n_rows_before": [n_rows_before], "n_rows_after": [n_rows_after],
-            "n_rows_removed": [n_rows_removed], "n_missing_date": [n_missing_date], "n_missing_open": [n_missing_open],
-            "n_missing_high": [n_missing_high], "n_missing_low": [n_missing_low], "n_missing_close": [n_missing_close],
-            "percent_missing_date": [percent_missing_date], "percent_missing_open": [percent_missing_open],
-            "percent_missing_high": [percent_missing_high], "percent_missing_low": [percent_missing_low],
-            "percent_missing_close": [percent_missing_close], "start_date": [start_date], "end_date": [end_date],
-            "max_date_diff": [max_date_diff], "n_date_diffs_above_2": [n_date_diffs_above_2]
-        })])
+        temp_row = pd.DataFrame({
+                "file": [file_name], "n_rows_before": [n_rows_before], "n_rows_after": [n_rows_after],
+                "n_rows_removed": [n_rows_removed], "n_missing_date": [n_missing_date], "n_missing_open": [n_missing_open],
+                "n_missing_high": [n_missing_high], "n_missing_low": [n_missing_low], "n_missing_close": [n_missing_close],
+                "percent_missing_date": [percent_missing_date], "percent_missing_open": [percent_missing_open],
+                "percent_missing_high": [percent_missing_high], "percent_missing_low": [percent_missing_low],
+                "percent_missing_close": [percent_missing_close], "start_date": [start_date], "end_date": [end_date],
+                "max_date_diff": [max_date_diff], "n_date_diffs_above_2": [n_date_diffs_above_2]
+            })
+        if diagnostics.shape[0] == 0:
+            diagnostics = temp_row
+        else:
+            diagnostics = pd.concat([diagnostics, temp_row])
         
         # Save cleaned file
         df = df.reset_index(drop=True)
@@ -88,7 +95,7 @@ def clean_data(file_names: List[str], file_prefix: str, dir_name: str, dev: bool
         if dev:
             break
     # Save diagnostics file
-    diagnostics.to_csv("diagnostics.csv", index=False)
+    diagnostics.to_csv("data/results/diagnostics.csv", index=False)
     return None
 
 if __name__ == "__main__":
