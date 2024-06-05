@@ -31,7 +31,7 @@ def get_inefficient_files(files: List[str], output_file: str) -> None:
         for file in tqdm(files, desc='Checking files for autocorrelation...'):
             data = pd.read_csv(f'data/cleaned/{file}')
             try:
-                p_value, autocorrelated = lbp_test(data['close'], p=0, q=0)
+                p_value, autocorrelated = lbp_test(data['close'].pct_change().dropna(), p=0, q=0)
             except ValueError:
                 continue
             f.write(f'{file.split('_')[1]}|{p_value}|{autocorrelated}\n')

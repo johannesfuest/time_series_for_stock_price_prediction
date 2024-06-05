@@ -11,7 +11,7 @@ def parse_args() -> argparse.Namespace:
     :return: parsed arguments
     """
     parser = argparse.ArgumentParser(description='Find the best model for time series data')
-    parser.add_argument('--output_file', type=str, help='Output file to save best models configs to')
+    parser.add_argument('--output_file', type=str, help='Output file to save best models configs to', default='sample_100.csv')
     parser.add_argument('--sample', action='store_true', help='Run on subsample of 100 stocks')
     parser.add_argument('--rolling', action='store_true', help='Refit model on rolling window when predicting')
     parser.add_argument('--split_num', type=int, default=4, help='Number of splits for cross-validation')

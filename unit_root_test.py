@@ -9,7 +9,7 @@ def run_unit_root_test(data):
     """
     Runs the Unit Root Test on the passed Pandas Series. Returns test stat & p-value
     """
-    adf = ADF(data.copy())
+    adf = ADF(data.copy(), trend='c', max_lags=20)
     return adf.stat, adf.pvalue
 
 
@@ -20,7 +20,7 @@ def test_data(directory):
         FilePath | Test Stat | Pvalue
     """
     data_list = []
-    for filename in tqdm(os.listdir(directory)):
+    for filename in tqdm(os.listdir(directory), desc='Processing files...'):
         if filename.endswith('.csv'):
             filepath = os.path.join(directory, filename)
             try:
@@ -32,18 +32,19 @@ def test_data(directory):
                 if len(data['close']) < 60:
                     raise ValueError("Less than 60 Stock Observations")
                 test_stat, p_value = run_unit_root_test(data['close'])
-                if p_value<=0.05:
-                    data_list.append([filename,test_stat,p_value])
+                test_stat_price, p_value_price = run_unit_root_test(data['close'])
+                data_list.append([filename,test_stat_price, p_value_price, p_value_price > 0.05, test_stat,p_value, p_value > 0.05])
             except Exception as e:
                 print(f"Error processing {filepath}: {e}")
 
-    return pd.DataFrame(data_list, columns = ['Filename', 'Test Stat', 'p-value'])
+    return pd.DataFrame(data_list, columns = ['file', 'test_stat_price', 'p_val_price', 'price_unit_root', 'test_stat_ret', 'p_val_ret', 'ret_unit_root'])
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Perform unit root tests on stock price data.")
     parser.add_argument("--directory", type=str, help="Directory containing CSV files", 
-                        default="/Users/jonathan.williams/Desktop/Stats_207_Final_Project/time_series_for_stock_price_prediction/data/cleaned")
+                        default="data/cleaned")
+    parser.add_argument("--output_file", type=str, default='unit_root_test.csv',
+                        help="Output file to save test results")
     args = parser.parse_args()
     stationary_ts_df = test_data(args.directory)
-    print(stationary_ts_df)
-    stationary_ts_df.to_csv("passed_unit_root_ts.csv", index=False)
+    stationary_ts_df.to_csv(f'data/results/{args.output_file}', index=False)

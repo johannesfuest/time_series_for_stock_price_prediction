@@ -8,7 +8,7 @@ from tqdm import tqdm
 def runs_test_package(data):
     """ Perform the runs test on an inputted pandas Series column and return test statistic / p-value. """
     # Convert data to binary format (1 if value is above median, 0 otherwise)
-    median_val = data.median()
+    median_val = data.mean()
     binary_sequence = (data > median_val).astype(int)    
     # Perform the runs test
     test_stat, p_value = runstest_1samp(binary_sequence, correction=False)
@@ -22,8 +22,8 @@ def process_file(filepath, output_file=None):
         if 'close' not in data.columns:
             raise ValueError(f"No 'Close' column in {filepath}")        
         # Perform the runs test
-        test_stat, p_value = runs_test_package(data['close'])
-        if p_value < 0.05:
+        test_stat, p_value = runs_test_package(data['close'].pct_change().dropna())
+        if p_value <= 0.05:
             random = False
         else:
             random = True
