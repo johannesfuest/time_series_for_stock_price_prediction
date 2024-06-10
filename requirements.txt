@@ -1,7 +1,9 @@
+arch
 jupyter
 matplotlib
 numpy
 pandas
+pmdarima
 scikit-learn
 scipy
 seaborn
