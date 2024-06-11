@@ -49,15 +49,15 @@ def get_best_configs(output_file: str, df_autocorrs: pd.DataFrame, p_values: Lis
     with open(f'data/results/{output_file}', 'a') as f:
         f.write('file|best_cfg|avg_rmse_across_folds|p_val|resids_autocorrelated\n')
     for file in tqdm(df_autocorrs['file'], desc='Finding best model configurations...'):
-        # try:
-        best_cfg, best_rmse, p_val, autocorrelated = sarima_training(f'data/cleaned/cleaned_{file}', p_values, d_values, 
-                                                                     q_values, split_num, predict, rolling, n_test)
-        with open(f'data/results/{output_file}', 'a') as f1:
-            f1.write(f'{file}|{best_cfg}|{best_rmse}|{p_val}|{autocorrelated}\n')
-        # except:
-        #     with open(output_file, 'a') as f1:
-        #         f1.write(f'{file}|{'error'}|{'error'}|{'error'}|{'error'}\n')
-        #     continue
+        try:
+            best_cfg, best_rmse, p_val, autocorrelated = sarima_training(f'data/cleaned/cleaned_{file}', p_values, d_values, 
+                                                                        q_values, split_num, predict, rolling, n_test)
+            with open(f'data/results/{output_file}', 'a') as f1:
+                f1.write(f'{file}|{best_cfg}|{best_rmse}|{p_val}|{autocorrelated}\n')
+        except:
+            with open(output_file, 'a') as f1:
+                f1.write(f'{file}|{'error'}|{'error'}|{'error'}|{'error'}\n')
+            continue
 
 if __name__ == '__main__':
     os.chdir(os.path.dirname(__file__))
