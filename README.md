@@ -1,4 +1,4 @@
-# Time Series for Stock Price Prediction
+# ARIMA for Price Prediction of Inefficient Stocks
 
 In this short project we applied weak-form market effiency tests to over 3000 Nasdaq listed stocks. For each stock we had daily opening, closing, 
 high, and low prices over the past 50 years (depending on the company's status and when it was listed of course).
