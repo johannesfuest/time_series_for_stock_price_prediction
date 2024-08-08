@@ -26,22 +26,20 @@ Overall, the results were close to expectation. Potential extensions would inclu
     2. Increasing the sample size.
 
 
-## Folder Structure
+
 <details>
-  <summary>Here</summary>
+  <summary>Project Structure</summary>
     
 - **data**: This folder contains the project's data in CSV format.
 - **dev**: This folder contains work in progress
 - **pipeline.py**: This file contains our automated time series forecasting training pipeline
 - **evaluation.py**: This file contains a script that measures the performance of our models.
 </details>
-## Folder Structure
 
 
-## Installation
 <details>
-  <summary>Here</summary>
-To ensure a clean and isolated environment, we recommed using a virtual environment. Here's how you can set up the environment:
+  <summary>Installation</summary>
+We recommed using a virtual environment. Here's how you can set up the environment:
 
 1. **Create a Virtual Environment**: Run the following command in your terminal to create a virtual environment named `venv`:
 
@@ -74,9 +72,8 @@ To ensure a clean and isolated environment, we recommed using a virtual environm
     Head to [kaggle](https://www.kaggle.com/datasets/svaningelgem/nasdaq-daily-stock-prices/data) and download and unzip the Nasdaq stock price dataset and move it to the data/raw directory:
 </details>
 
-## Running Experiements
 <details>
-  <summary>Here</summary>
+  <summary>Running Experiments</summary>
 To run the experiments and replicate the results of our projects, run the following commands:
 
 1. **Data Preprocessing**: This will created cleaned versions of all time series stored in the cleaned dir.
